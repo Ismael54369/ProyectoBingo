@@ -45,40 +45,39 @@
 <div id="cards" class="grid"></div>
 
 <script>
-  const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vToizG9EuZIQcYMTFLfT9byFuPLy9RcaIlY4jhYH4M_H77f05WmJ7PT9svFnYrhBXikGuRf1nFhrZP5/pub?gid=861123478&single=true&output=csv";  
+  // Los datos de las tarjetas ahora están aquí, directamente en el código.
+  // ¡Añade todas tus tarjetas aquí!
+  const allCardsInfo = [
+    { id: "1", nombre: "Tarjeta 1", enlace: "https://drive.google.com/file/d/1h7CaohyjOGpOt4znkIhP9y81bCJltWw5/view?usp=sharing" },
+    { id: "2", nombre: "Tarjeta 2", enlace: "https://drive.google.com/file/d/18E7wM0L7_YeSRTMfp9wdBhdV9MGudtLd/view?usp=sharing" },
+    { id: "3", nombre: "Tarjeta 3", enlace: "https://drive.google.com/file/d/1CfL7qDxJQ82fgQNSdeaOR2AcDkhOhWRS/view?usp=sharing" },
+    { id: "4", nombre: "Tarjeta 4", enlace: "https://drive.google.com/file/d/1srX9G7rVNUcmTqevPPLx0_ipeEFH-lTF/view?usp=sharing" },
+    { id: "5", nombre: "Tarjeta 5", enlace: "https://drive.google.com/file/d/1d1m6Rp2zueeZzUFbM8LoZWf_KrApOWkK/view?usp=sharing" },
+    { id: "6", nombre: "Tarjeta 6", enlace: "https://drive.google.com/file/d/1fCT16aTFmijpMwWRdVhPsI3w5JMAfE2W/view?usp=sharing" },
+    { id: "7", nombre: "Tarjeta 7", enlace: "https://drive.google.com/file/d/1WcOKmiq8aCa1-6KPviz9aYp-4PwTAg0r/view?usp=sharing" },
+    { id: "8", nombre: "Tarjeta 8", enlace: "https://drive.google.com/file/d/14m-zLZmWDJNivW_DRDw5tGbHQPbpBU49/view?usp=sharing" },
+    { id: "9", nombre: "Tarjeta 9", enlace: "https://drive.google.com/file/d/1p-dV2XQtjCkNB-hk2aBqtm-EpqD9iP-U/view?usp=sharing" },
+    { id: "10", nombre: "Tarjeta 10", enlace: "https://drive.google.com/file/d/1eOvpGwb_j1ENejXgISXb3sGkjevCL5os/view?usp=sharing" },
+    { id: "11", nombre: "Tarjeta 11", enlace: "https://drive.google.com/file/d/1PYv15T0H04wkH_bvASCFEJqkA6Du3eHf/view?usp=sharing" },
+    { id: "12", nombre: "Tarjeta 12", enlace: "https://drive.google.com/file/d/17rIYaWXQJpd1J2vZXZeIyhGCXXuq-ISl/view?usp=sharing" },
+    { id: "13", nombre: "Tarjeta 13", enlace: "https://drive.google.com/file/d/1JnvPYgT2fi1tOOtQHA4pF9sxy5YPURE9/view?usp=sharing" },
+    { id: "14", nombre: "Tarjeta 14", enlace: "https://drive.google.com/file/d/1TdCxOrCroBjOUoOAfHXk6bLJYIZwH5rU/view?usp=sharing" },
+    { id: "15", nombre: "Tarjeta 15", enlace: "https://drive.google.com/file/d/1TdCxOrCroBjOUoOAfHXk6bLJYIZwH5rU/view?usp=sharing" },
+    { id: "16", nombre: "Tarjeta 16", enlace: "https://drive.google.com/file/d/1yk9d29p2aUXvjhU_aQd5Lzl8K8lm2dKF/view?usp=sharing" },
+    { id: "17", nombre: "Tarjeta 17", enlace: "https://drive.google.com/file/d/1qfrIgECpEwYJRli52TvOGLqUEujP4eVd/view?usp=sharing" },
+    { id: "18", nombre: "Tarjeta 18", enlace: "https://drive.google.com/file/d/19x1OrMd-pOtcajpOsS3cWuU3WXCH7RNq/view?usp=sharing" },
+    { id: "19", nombre: "Tarjeta 19", enlace: "https://drive.google.com/file/d/15vKjFbeGCm30qAAo9p-WtflOTxCDZwQO/view?usp=sharing" },
+    { id: "20", nombre: "Tarjeta 20", enlace: "https://drive.google.com/file/d/17-cgtn0BCiQxRcBy4iVOg6nQK9MYQKGM/view?usp=sharing" }
+  ];
+  
+  let cardsData = []; // Este array contendrá la info de la tarjeta + su estado.
 
-  let cardsData = [];
-
-  async function loadCards() {
+  async function loadCardState() {
     try {
-      const res = await fetch(SHEET_URL);
-      if (!res.ok) {
-        throw new Error(`Error al cargar los datos: ${res.statusText}`);
-      }
-      const text = await res.text();
-      // Limpiamos el texto de posibles retornos de carro (\r) y luego dividimos por líneas.
-      const rows = text.replace(/\r/g, "").split("\n").map(r => r.split(","));
-      
-      const header = rows.shift();
-      const idx = {
-        id: header.indexOf("id"),
-        nombre: header.indexOf("nombre"),
-        enlace: header.indexOf("enlace"),
-        disponible: header.indexOf("disponible")
-      };
-  
-      // Procesamos las filas de forma segura, evitando errores con filas malformadas.
-      cardsData = rows.map(r => {
-        // Nos aseguramos de que la fila tenga suficientes columnas antes de acceder a ellas.
-        if (!r || r.length <= idx.disponible || !r[idx.id]) return null;
-  
-        return {
-          id: r[idx.id],
-          nombre: r[idx.nombre],
-          enlace: r[idx.enlace],
-          disponible: r[idx.disponible].trim().toUpperCase() === 'TRUE',
-        };
-      }).filter(card => card !== null); // Eliminamos las filas que resultaron ser nulas.
+      // Ahora solo pedimos al servidor el estado (disponible/ocupado) de las tarjetas.
+      const res = await fetch('state.php'); // Un nuevo script que solo devuelve el estado.
+      const state = await res.json(); // { "1": false, "2": true, ... }
+      cardsData = allCardsInfo.map(card => ({ ...card, disponible: state[card.id] }));
   
       renderCards();
     } catch (error) {
@@ -89,19 +88,24 @@
 
   function renderCards() {
     const container = document.getElementById("cards");
+    const miTarjetaId = localStorage.getItem('bingoCardId');
     container.innerHTML = "";
 
     cardsData.forEach(card => {
       const div = document.createElement("div");
       let classes = "card";
-      if (!card.disponible) {
-        classes += " ocupada";
-      }
-      if (localStorage.getItem('bingoCardId') === card.id) {
+      const esMiTarjeta = miTarjetaId === card.id;
+
+      if (esMiTarjeta) {
         classes += " tuya";
+        div.innerHTML = `<strong>${card.nombre}</strong><br>(¡Esta es tu tarjeta!)`;
+      } else if (!card.disponible) {
+        classes += " ocupada";
+        div.innerHTML = `<strong>${card.nombre}</strong><br>(Ocupada)`;
+      } else {
+        div.innerHTML = `<strong>${card.nombre}</strong><br>(Disponible)`;
       }
       div.className = classes;
-      div.innerHTML = `<strong>${card.nombre}</strong><br>(${card.disponible ? "Disponible" : "Ocupada"})`;
       div.onclick = () => handleCardClick(card);
 
       container.appendChild(div);
@@ -109,20 +113,24 @@
   }
 
   function handleCardClick(card) {
-    const esMiTarjeta = localStorage.getItem('bingoCardId') === card.id;
+    const miTarjetaId = localStorage.getItem('bingoCardId');
+    const esMiTarjeta = miTarjetaId === card.id;
 
     if (esMiTarjeta) {
-      // Si es mi tarjeta, la prioridad es abrir el enlace.
+      // Es mi tarjeta, la abro.
       if (card.enlace && card.enlace.startsWith('http')) {
         window.open(card.enlace, '_blank');
       } else {
         alert("Tu tarjeta aún no tiene un enlace para abrir.");
       }
+    } else if (miTarjetaId) {
+      // Ya tengo una tarjeta asignada, y he hecho clic en otra. No hago nada.
+      alert("Ya tienes una tarjeta asignada. Solo puedes abrir la tuya.");
     } else if (card.disponible) {
-      // Si no es mi tarjeta pero está libre, puedo cogerla.
+      // No tengo tarjeta y esta está libre, la reclamo.
       claimCard(card.id);
     } else {
-      // Si no es mi tarjeta y no está libre, es de otro.
+      // No tengo tarjeta y esta está ocupada.
       alert("Esta tarjeta ya está asignada a otro usuario.");
     }
   }
@@ -139,30 +147,27 @@
     // Deshabilitamos temporalmente la interfaz para evitar dobles clics
     document.body.style.pointerEvents = 'none';
 
-    fetch(`https://script.google.com/macros/s/AKfycbw7wApyyA5SswCBVTrgd0vB5Bu8DSqjf_nceT4SO9j1/exec?id=${id}`)
+    // Llamamos a nuestro nuevo script PHP
+    fetch(`claim.php?id=${id}`, { method: 'POST' })
       .then(res => res.json()) // Convertimos la respuesta a JSON
       .then(res => {
         if (res.success) {
           localStorage.setItem('bingoCardId', id); // Solo guardamos si el servidor confirma el éxito.
           alert("¡Tarjeta asignada con éxito!");
-          // Refrescamos inmediatamente para mostrar el nuevo estado.
-          // No es estrictamente necesario recargar aquí, ya que la próxima acción del usuario será abrir el enlace.
-          // Pero lo dejamos por consistencia.
-          renderCards(); // Usamos renderCards para una actualización visual instantánea sin volver a llamar a la API.
+          loadCardState(); // Recargamos solo el estado, es más rápido.
         } else {
           // Si falló (ej: alguien la cogió antes), informamos al usuario y refrescamos.
           alert(`No se pudo asignar la tarjeta: ${res.message}`);
-          loadCards(); // Aquí sí es crucial recargar desde la fuente para ver quién cogió la tarjeta.
+          loadCardState();
         }
       })
       .catch(error => console.error("Error al intentar reclamar la tarjeta:", error))
       .finally(() => {
-        // Reactivamos la interfaz en cualquier caso (éxito o error)
         document.body.style.pointerEvents = 'auto';
       });
   }
-
-  loadCards();
+  
+  loadCardState();
 </script>
 
 </body>

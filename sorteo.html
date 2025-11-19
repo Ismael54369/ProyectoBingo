@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Panel de Sorteo del Bingo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f3f3;
+      padding: 20px;
+    }
+    .grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .bingo-container {
+      text-align: center;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 2px solid #ccc;
+    }
+    #current-ball-display {
+      border: 2px dashed #aaa;
+      width: 200px;
+      height: 200px;
+      margin: 20px auto;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: white;
+    }
+    #current-ball-display img {
+      max-width: 100%;
+      max-height: 100%;
+    }
+    #draw-button {
+      padding: 15px 30px;
+      font-size: 1.2em;
+      cursor: pointer;
+    }
+    #history-display .ball-history {
+      width: 60px;
+      height: 60px;
+      margin: 5px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="bingo-container">
+  <h2>Sorteo del Bingo</h2>
+  <div id="current-ball-display">
+    <p>¡Haz clic en "Sacar Bola" para empezar!</p>
+  </div>
+  <button id="draw-button">Sacar Bola</button>
+  <h3>Historial:</h3>
+  <div id="history-display" class="grid"></div>
+</div>
+
+<!-- Cargamos y ejecutamos el script del bingo al final para asegurar que el HTML está listo -->
+<script src="sorteo.js"></script>
+
+</body>
+</html>
