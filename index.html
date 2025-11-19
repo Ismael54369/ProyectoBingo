@@ -136,15 +136,28 @@
     const confirmMsg = confirm("¿Quieres elegir esta tarjeta? No podrás cambiarla después.");
     if (!confirmMsg) return;
 
-    fetch(`https://script.google.com/macros/s/AKfycbw7wApyyA5SswCBVTrgd0vB5Bu8DSqjf_nceT4SO9j1/exec?id=${id}`, {
-      mode: 'no-cors' 
-    })
+    // Deshabilitamos temporalmente la interfaz para evitar dobles clics
+    document.body.style.pointerEvents = 'none';
+
+    fetch(`https://script.google.com/macros/s/AKfycbw7wApyyA5SswCBVTrgd0vB5Bu8DSqjf_nceT4SO9j1/exec?id=${id}`)
+      .then(res => res.json()) // Convertimos la respuesta a JSON
       .then(res => {
-        localStorage.setItem('bingoCardId', id); // Guardamos que este usuario ya ha elegido.
-        alert("¡Tarjeta asignada!");
-        setTimeout(loadCards, 1000); // Esperamos 1 segundo para dar tiempo a Google a actualizar la hoja.
+        if (res.success) {
+          localStorage.setItem('bingoCardId', id); // Solo guardamos si el servidor confirma el éxito.
+          alert("¡Tarjeta asignada con éxito!");
+          // Refrescamos inmediatamente para mostrar el nuevo estado.
+          loadCards();
+        } else {
+          // Si falló (ej: alguien la cogió antes), informamos al usuario y refrescamos.
+          alert(`No se pudo asignar la tarjeta: ${res.message}`);
+          loadCards();
+        }
       })
-      .catch(error => console.error("Error al intentar reclamar la tarjeta:", error));
+      .catch(error => console.error("Error al intentar reclamar la tarjeta:", error))
+      .finally(() => {
+        // Reactivamos la interfaz en cualquier caso (éxito o error)
+        document.body.style.pointerEvents = 'auto';
+      });
   }
 
   loadCards();
