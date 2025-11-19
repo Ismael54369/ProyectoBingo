@@ -146,11 +146,13 @@
           localStorage.setItem('bingoCardId', id); // Solo guardamos si el servidor confirma el éxito.
           alert("¡Tarjeta asignada con éxito!");
           // Refrescamos inmediatamente para mostrar el nuevo estado.
-          loadCards();
+          // No es estrictamente necesario recargar aquí, ya que la próxima acción del usuario será abrir el enlace.
+          // Pero lo dejamos por consistencia.
+          renderCards(); // Usamos renderCards para una actualización visual instantánea sin volver a llamar a la API.
         } else {
           // Si falló (ej: alguien la cogió antes), informamos al usuario y refrescamos.
           alert(`No se pudo asignar la tarjeta: ${res.message}`);
-          loadCards();
+          loadCards(); // Aquí sí es crucial recargar desde la fuente para ver quién cogió la tarjeta.
         }
       })
       .catch(error => console.error("Error al intentar reclamar la tarjeta:", error))
