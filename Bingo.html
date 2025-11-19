@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Elige tu Tarjeta de Bingo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f3f3f3;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+    }
+    .card {
+      border: 1px solid #ccc;
+      background: white;
+      padding: 10px;
+      margin: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+    .card.ocupada {
+      background: #ddd;
+      cursor: not-allowed;
+      text-decoration: line-through;
+    }
+    .card.tuya {
+      background: #d4edda; /* Un verde claro para destacar */
+      border-color: #c3e6cb;
+      font-weight: bold;
+    }
+    .grid {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Elige tu tarjeta de bingo</h1>
+<p style="text-align:center">Haz clic en una libre. Una vez elegida, queda bloqueada para los demás.</p>
+
+<div id="cards" class="grid"></div>
+
+<script>
+  const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vToizG9EuZIQcYMTFLfT9byFuPLy9RcaIlY4jhYH4M_H77f05WmJ7PT9svFnYrhBXikGuRf1nFhrZP5/pub?gid=861123478&single=true&output=csv";  
+
+  let cardsData = [];
+
+  async function loadCards() {
+    try {
+      const res = await fetch(SHEET_URL);
+      if (!res.ok) {
+        throw new Error(`Error al cargar los datos: ${res.statusText}`);
+      }
+      const text = await res.text();
+      // Limpiamos el texto de posibles retornos de carro (\r) y luego dividimos por líneas.
+      const rows = text.replace(/\r/g, "").split("\n").map(r => r.split(","));
+      
+      const header = rows.shift();
+      const idx = {
+        id: header.indexOf("id"),
+        nombre: header.indexOf("nombre"),
+        enlace: header.indexOf("enlace"),
+        disponible: header.indexOf("disponible")
+      };
+  
+      // Procesamos las filas de forma segura, evitando errores con filas malformadas.
+      cardsData = rows.map(r => {
+        // Nos aseguramos de que la fila tenga suficientes columnas antes de acceder a ellas.
+        if (!r || r.length <= idx.disponible || !r[idx.id]) return null;
+  
+        return {
+          id: r[idx.id],
+          nombre: r[idx.nombre],
+          enlace: r[idx.enlace],
+          disponible: r[idx.disponible].trim().toUpperCase() === 'TRUE',
+        };
+      }).filter(card => card !== null); // Eliminamos las filas que resultaron ser nulas.
+  
+      renderCards();
+    } catch (error) {
+      console.error("Error al cargar o procesar las tarjetas:", error);
+      document.getElementById("cards").innerHTML = `<p style="color: red; text-align: center;">Error al cargar las tarjetas. Revisa la consola para más detalles.</p>`;
+    }
+  }
+
+  function renderCards() {
+    const container = document.getElementById("cards");
+    container.innerHTML = "";
+
+    cardsData.forEach(card => {
+      const div = document.createElement("div");
+      let classes = "card";
+      if (!card.disponible) {
+        classes += " ocupada";
+      }
+      if (localStorage.getItem('bingoCardId') === card.id) {
+        classes += " tuya";
+      }
+      div.className = classes;
+      div.innerHTML = `<strong>${card.nombre}</strong><br>(${card.disponible ? "Disponible" : "Ocupada"})`;
+      div.onclick = () => handleCardClick(card);
+
+      container.appendChild(div);
+    });
+  }
+
+  function handleCardClick(card) {
+    const esMiTarjeta = localStorage.getItem('bingoCardId') === card.id;
+
+    if (esMiTarjeta) {
+      // Si es mi tarjeta, la prioridad es abrir el enlace.
+      if (card.enlace && card.enlace.startsWith('http')) {
+        window.open(card.enlace, '_blank');
+      } else {
+        alert("Tu tarjeta aún no tiene un enlace para abrir.");
+      }
+    } else if (card.disponible) {
+      // Si no es mi tarjeta pero está libre, puedo cogerla.
+      claimCard(card.id);
+    } else {
+      // Si no es mi tarjeta y no está libre, es de otro.
+      alert("Esta tarjeta ya está asignada a otro usuario.");
+    }
+  }
+
+  function claimCard(id) {    
+    if (localStorage.getItem('bingoCardId')) {
+      alert("Error: Ya has elegido una tarjeta. No puedes elegir más de una.");
+      return;
+    }
+
+    const confirmMsg = confirm("¿Quieres elegir esta tarjeta? No podrás cambiarla después.");
+    if (!confirmMsg) return;
+
+    fetch(`https://script.google.com/macros/s/AKfycbw7wApyyA5SswCBVTrgd0vB5Bu8DSqjf_nceT4SO9j1/exec?id=${id}`, {
+      mode: 'no-cors' 
+    })
+      .then(res => {
+        localStorage.setItem('bingoCardId', id); // Guardamos que este usuario ya ha elegido.
+        alert("¡Tarjeta asignada!");
+        setTimeout(loadCards, 1000); // Esperamos 1 segundo para dar tiempo a Google a actualizar la hoja.
+      })
+      .catch(error => console.error("Error al intentar reclamar la tarjeta:", error));
+  }
+
+  loadCards();
+</script>
+
+</body>
+</html>
